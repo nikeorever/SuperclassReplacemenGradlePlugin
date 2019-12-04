@@ -17,15 +17,21 @@ gradlePlugin {
 
 pluginBundle {
     website = "https://github.com/nikeorever/SuperclassReplacemenGradlePlugin"
-    vcsUrl = "git@github.com:nikeorever/SuperclassReplacemenGradlePlugin.git"
+    vcsUrl = "https://github.com/nikeorever/SuperclassReplacemenGradlePlugin.git"
     description = "Use android transform api to dynamically replace super class"
     (plugins) {
         "superclassReplacementPlugin" {
             // id is captured from java-gradle-plugin configuration
             displayName = "Superclass Replacement plugin"
             tags = listOf("android", "gradle", "asm", "plugin")
-            version = "0.1"
+            version = "1.0"
         }
+    }
+
+    mavenCoordinates {
+        groupId = "org.nikeo.gradle"
+        artifactId = "superclass-replacement-plugin"
+        version = "1.0"
     }
 }
 
