@@ -3,6 +3,7 @@ plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "0.10.1"
     `java-gradle-plugin`
+    id("com.jfrog.bintray") version "1.8.4"
 }
 
 // Use java-gradle-plugin to generate plugin descriptors and specify plugin ids
@@ -30,7 +31,7 @@ pluginBundle {
 
     mavenCoordinates {
         groupId = "org.nikeo.gradle"
-        artifactId = "superclass-replacement-plugin"
+        artifactId = "superclass-replacement-gradle-plugin"
         version = "1.0"
     }
 }
@@ -47,4 +48,6 @@ dependencies {
     compileOnly("org.ow2.asm:asm:6.0")
     implementation("com.android.tools.build:gradle:3.5.0")
 }
+
+apply(from = "../gradle/gradle-mvn-push.gradle.kts")
 
