@@ -28,4 +28,14 @@ public class LollipopCrashWebView extends WebView {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
+    @Override
+    protected void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getContext(), "222", Toast.LENGTH_SHORT).show();
+            }
+        }, 200);
+    }
 }

@@ -4,7 +4,7 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
-apply plugin: 'com.nikeo.gradle.superclass-replacement'
+apply plugin: 'com.nikeo.gradle.lollipop-crashWebView-fix'
 
 android {
     compileSdkVersion 29
@@ -25,10 +25,8 @@ android {
     }
 }
 
-superclassReplacement {
-    qualifiedNameReplacements = [
-            'com.nikeorever.android.asm.LollipopCrashWebView': 'com.nikeorever.android.asm.LollipopFixingWebView'
-    ]
+crashWebViews {
+    qualifiedNames = ['com.nikeorever.android.asm.LollipopCrashWebView']
 }
 
 dependencies {

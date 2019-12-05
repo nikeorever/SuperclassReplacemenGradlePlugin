@@ -27,9 +27,9 @@ public class LollipopFixingWebView extends WebView {
         super(getFixedContext(context), attrs, defStyleAttr, defStyleRes);
     }
 
-    private static Context getFixedContext(Context context) {
+    public static Context getFixedContext(Context context) {
         Log.i("LollipopFixingWebView", "WebView has been fixed by LollipopWebViewFixingPlugin");
-        if (Build.VERSION.SDK_INT >= 21 && Build.VERSION.SDK_INT < 23) // Android Lollipop 5.0 & 5.1
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.VERSION.SDK_INT < Build.VERSION_CODES.M) // Android Lollipop 5.0 & 5.1
             return context.createConfigurationContext(new Configuration());
         return context;
     }

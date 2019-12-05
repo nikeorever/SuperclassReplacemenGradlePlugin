@@ -13,6 +13,11 @@ gradlePlugin {
             id = "com.nikeo.gradle.superclass-replacement"
             implementationClass = "com.nikeo.gradle.SuperclassReplacementPlugin"
         }
+
+        create("lollipopCrashWebViewFixingPlugin") {
+            id = "com.nikeo.gradle.lollipop-crashWebView-fix"
+            implementationClass = "com.nikeo.gradle.LollipopCrashWebViewFixingPlugin"
+        }
     }
 }
 
@@ -25,14 +30,21 @@ pluginBundle {
             // id is captured from java-gradle-plugin configuration
             displayName = "Superclass Replacement plugin"
             tags = listOf("android", "gradle", "asm", "plugin")
-            version = "2.0"
+            version = "2.1"
+        }
+
+        "lollipopCrashWebViewFixingPlugin" {
+            // id is captured from java-gradle-plugin configuration
+            displayName = "LollipopCrashWebViewFixingPlugin"
+            tags = listOf("android", "webView", "asm", "Lollipop")
+            version = "1.1"
         }
     }
 
     mavenCoordinates {
         groupId = "org.nikeo.gradle"
         artifactId = "superclass-replacement-gradle-plugin"
-        version = "2.0"
+        version = "2.1"
     }
 }
 
