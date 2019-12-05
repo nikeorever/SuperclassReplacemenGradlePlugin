@@ -5,29 +5,25 @@ import com.android.build.gradle.LibraryPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.findPlugin
 
 class SuperclassReplacementPlugin : Plugin<Project> {
 
     override fun apply(project: Project) = project.run {
-        plugins.mapNotNull { plugin ->
-            when (plugin) {
-                is AppPlugin -> {
-                    project.logger.info("[SuperclassReplacementPlugin], apply to app:${project.name}")
-                    plugin.extension
-                }
-                is LibraryPlugin -> {
-                    project.logger.info("[SuperclassReplacementPlugin], apply to android library:${project.name}")
-                    plugin.extension
-                }
-                else -> null
-            }
-        }.forEach {
-            val superclassReplacement = extensions.create(
-                "superclassReplacement",
-                SuperclassReplacement::class,
-                project
-            )
-            it.registerTransform(SuperclassReplacementTransform(project, superclassReplacement))
+        val appPlugin = plugins.findPlugin(AppPlugin::class)
+        requireNotNull(appPlugin) {
+            "SuperclassReplacementPlugin must apply to app"
         }
+        val superclassReplacement = extensions.create(
+            "superclassReplacement",
+            SuperclassReplacement::class,
+            project
+        )
+        appPlugin.extension.registerTransform(
+            SuperclassReplacementTransform(
+                project,
+                superclassReplacement
+            )
+        )
     }
 }

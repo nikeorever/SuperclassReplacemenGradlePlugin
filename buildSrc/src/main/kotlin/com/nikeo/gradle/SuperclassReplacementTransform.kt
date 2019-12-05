@@ -1,17 +1,19 @@
 package com.nikeo.gradle
 
 import com.android.SdkConstants
-import com.android.build.api.transform.Format
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.Transform
-import com.android.build.api.transform.TransformInvocation
+import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.utils.FileUtils
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.io.IOUtils
 import org.gradle.api.Project
 import org.objectweb.asm.*
 import java.io.File
 import java.io.FileOutputStream
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
+import java.util.zip.ZipEntry
 
 
 internal class SuperclassReplacementTransform(
@@ -35,8 +37,9 @@ internal class SuperclassReplacementTransform(
         if (invocation == null) {
             return
         }
+        invocation.outputProvider.deleteAll()
         replacement.qualifiedNameReplacements.get().forEach { (source, replace) ->
-            project.logger.info("$source's super class will replace to $replace by SuperclassReplacementTransform")
+            project.logInfo("$source's super class will replace to $replace by SuperclassReplacementTransform")
         }
         val inputs = invocation.inputs
         val outputProvider = invocation.outputProvider
@@ -46,57 +49,122 @@ internal class SuperclassReplacementTransform(
             val directoryInputs = input.directoryInputs
 
             jarInputs.forEach {
-                var jarName = it.name
-                val md5Name = DigestUtils.md5Hex(it.file.absolutePath)
-                if (jarName.endsWith(SdkConstants.DOT_JAR)) {
-                    jarName = jarName.substring(0, jarName.length - 4)
-                }
-                val dest = outputProvider.getContentLocation(
-                    jarName + md5Name,
-                    it.contentTypes,
-                    it.scopes,
-                    Format.JAR
-                )
-                FileUtils.copyFile(it.file, dest)
+                handJarInput(it, outputProvider)
             }
 
             directoryInputs.forEach {
-                childFileOf(it.file) { classFile ->
-                    replacement.qualifiedNameReplacements.orNull
-                        ?.filterKeys { source ->
-                            val sourceClassFilePath =
-                                source.replace(".", "/") + ".class"
-                            classFile.path.contains(sourceClassFilePath)
-                        }
-                        ?.takeIf(Map<String, String>::isNotEmpty)
-                        ?.values
-                        ?.first()
-                        ?.let { replacement ->
-                            val classReader = ClassReader(classFile.inputStream())
-                            val classWriter = ClassWriter(ClassWriter.COMPUTE_MAXS)
-
-                            classReader.accept(
-                                MyClassVisitor(classWriter, replacement.replace(".", "/")),
-                                ClassReader.EXPAND_FRAMES
-                            )
-                            val byteArr = classWriter.toByteArray()
-                            val fileOutputStream = FileOutputStream(classFile)
-                            fileOutputStream.write(byteArr)
-                            fileOutputStream.flush()
-                            fileOutputStream.close()
-                        }
-                }
-
-                val dest = outputProvider.getContentLocation(
-                    it.name,
-                    it.contentTypes,
-                    it.scopes,
-                    Format.DIRECTORY
-                )
-
-                FileUtils.copyDirectory(it.file, dest)
+                handDirectoryInput(it, outputProvider)
             }
         }
+    }
+
+    private fun handJarInput(jarInput: JarInput, outputProvider: TransformOutputProvider) {
+        if (jarInput.file.absolutePath.endsWith(SdkConstants.DOT_JAR)) {
+            var jarName = jarInput.name
+            val md5Name = DigestUtils.md5Hex(jarInput.file.absolutePath)
+            if (jarName.endsWith(SdkConstants.DOT_JAR)) {
+                jarName = jarName.substring(0, jarName.length - 4)
+            }
+
+            val tmpFile = File(jarInput.file.parent + File.separator + "classes_temp.jar")
+            if (tmpFile.exists()) {
+                tmpFile.delete()
+            }
+
+            val jarFile = JarFile(jarInput.file)
+            val enumeration = jarFile.entries()
+
+            val jarOutputStream = JarOutputStream(FileOutputStream(tmpFile))
+
+            while (enumeration.hasMoreElements()) {
+                val jarEntry = enumeration.nextElement() as JarEntry
+                val entryName = jarEntry.name
+                val zipEntry = ZipEntry(entryName)
+                val inputStream = jarFile.getInputStream(zipEntry)
+
+                replacement.qualifiedNameReplacements.orNull?.forEach { source, replacement ->
+                    if (entryName == source.replace(".", File.separator) + SdkConstants.DOT_CLASS) {
+                        project.logInfo("start replace $source'superclass to $replacement")
+                        jarOutputStream.putNextEntry(zipEntry)
+
+                        val classReader = ClassReader(IOUtils.toByteArray(inputStream))
+                        val classWriter = ClassWriter(ClassWriter.COMPUTE_MAXS)
+
+                        classReader.accept(
+                            MyClassVisitor(classWriter, replacement.replace(".", File.separator)),
+                            ClassReader.EXPAND_FRAMES
+                        )
+                        val byteArr = classWriter.toByteArray()
+
+                        jarOutputStream.write(byteArr)
+                    } else {
+                        jarOutputStream.putNextEntry(zipEntry)
+                        jarOutputStream.write(IOUtils.toByteArray(inputStream))
+                    }
+                } ?: run {
+                    jarOutputStream.putNextEntry(zipEntry)
+                    jarOutputStream.write(IOUtils.toByteArray(inputStream))
+                }
+
+                jarOutputStream.closeEntry()
+            }
+            //结束
+            jarOutputStream.close()
+            jarFile.close()
+
+            val dest = outputProvider.getContentLocation(
+                jarName + md5Name,
+                jarInput.contentTypes,
+                jarInput.scopes,
+                Format.JAR
+            )
+            FileUtils.copyFile(tmpFile, dest)
+            tmpFile.delete()
+        }
+
+    }
+
+    private fun handDirectoryInput(
+        directoryInput: DirectoryInput,
+        outputProvider: TransformOutputProvider
+    ) {
+        val file = directoryInput.file
+        if (file.isDirectory) {
+            childFileOf(file) { classFile ->
+                replacement.qualifiedNameReplacements.orNull?.forEach { source, replacement ->
+                    if (classFile.path.contains(
+                            source.replace(
+                                ".",
+                                File.separator
+                            ) + SdkConstants.DOT_CLASS
+                        )
+                    ) {
+                        project.logInfo("start replace ${classFile.path}'superclass to $replacement")
+                        val classReader = ClassReader(classFile.inputStream())
+                        val classWriter = ClassWriter(ClassWriter.COMPUTE_MAXS)
+
+                        classReader.accept(
+                            MyClassVisitor(classWriter, replacement.replace(".", File.separator)),
+                            ClassReader.EXPAND_FRAMES
+                        )
+                        val byteArr = classWriter.toByteArray()
+                        val fileOutputStream =
+                            FileOutputStream(classFile.parentFile.absolutePath + File.separator + classFile.name)
+                        fileOutputStream.write(byteArr)
+                        fileOutputStream.flush()
+                        fileOutputStream.close()
+                    }
+                }
+            }
+        }
+        val dest = outputProvider.getContentLocation(
+            directoryInput.name,
+            directoryInput.contentTypes,
+            directoryInput.scopes,
+            Format.DIRECTORY
+        )
+
+        FileUtils.copyDirectory(file, dest)
     }
 
     private class MyClassVisitor(classWriter: ClassWriter, private val superClassName: String) :

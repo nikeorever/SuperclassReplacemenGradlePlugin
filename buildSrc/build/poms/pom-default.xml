@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.nikeo.gradle</groupId>
   <artifactId>superclass-replacement-gradle-plugin</artifactId>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.4-SNAPSHOT</version>
   <name>Superclass Replacement Gradle Plugin</name>
   <description>Use android transform api to dynamically replace super class.</description>
   <url>https://github.com/nikeorever/SuperclassReplacemenGradlePlugin/</url>

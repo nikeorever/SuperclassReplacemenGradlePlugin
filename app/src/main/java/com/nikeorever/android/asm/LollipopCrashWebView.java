@@ -1,9 +1,11 @@
 package com.nikeorever.android.asm;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 
@@ -25,4 +27,5 @@ public class LollipopCrashWebView extends WebView {
         //com.nikeorever.android.asm.LollipopCrashWebView
         super(context, attrs, defStyleAttr, defStyleRes);
     }
+
 }

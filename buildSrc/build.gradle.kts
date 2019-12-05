@@ -25,14 +25,14 @@ pluginBundle {
             // id is captured from java-gradle-plugin configuration
             displayName = "Superclass Replacement plugin"
             tags = listOf("android", "gradle", "asm", "plugin")
-            version = "1.0"
+            version = "2.0"
         }
     }
 
     mavenCoordinates {
         groupId = "org.nikeo.gradle"
         artifactId = "superclass-replacement-gradle-plugin"
-        version = "1.0"
+        version = "2.0"
     }
 }
 
