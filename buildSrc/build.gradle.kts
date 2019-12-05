@@ -24,27 +24,28 @@ gradlePlugin {
 pluginBundle {
     website = "https://github.com/nikeorever/SuperclassReplacemenGradlePlugin"
     vcsUrl = "https://github.com/nikeorever/SuperclassReplacemenGradlePlugin.git"
-    description = "Use android transform api to dynamically replace super class"
     (plugins) {
         "superclassReplacementPlugin" {
             // id is captured from java-gradle-plugin configuration
             displayName = "Superclass Replacement plugin"
+            description = "Use android transform api to dynamically replace super class"
             tags = listOf("android", "gradle", "asm", "plugin")
-            version = "2.1"
+            version = "2.3"
         }
 
         "lollipopCrashWebViewFixingPlugin" {
             // id is captured from java-gradle-plugin configuration
             displayName = "LollipopCrashWebViewFixingPlugin"
+            description = "Use android transform api to fix webView crash problem in Lollipop"
             tags = listOf("android", "webView", "asm", "Lollipop")
-            version = "1.1"
+            version = "1.3"
         }
     }
 
     mavenCoordinates {
-        groupId = "org.nikeo.gradle"
+        groupId = "com.nikeo.gradle"
         artifactId = "superclass-replacement-gradle-plugin"
-        version = "2.1"
+        version = "2.3"
     }
 }
 
