@@ -1,9 +1,8 @@
 plugins {
-    kotlin("jvm") version "1.3.50"
+    kotlin("jvm") version "1.3.61"
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "0.10.1"
     `java-gradle-plugin`
-    id("com.jfrog.bintray") version "1.8.4"
 }
 
 // Use java-gradle-plugin to generate plugin descriptors and specify plugin ids
@@ -63,11 +62,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly(kotlin("stdlib-jdk8", "1.3.50"))
+    compileOnly(kotlin("stdlib-jdk8", "1.3.61"))
     compileOnly(gradleApi())
-    compileOnly("org.ow2.asm:asm:6.0")
-    implementation("com.android.tools.build:gradle:3.5.0")
-    implementation("com.nikeo:anx:1.0.1-SNAPSHOT")
+    compileOnly("org.ow2.asm:asm:7.0")
+    implementation("com.android.tools.build:gradle:3.5.3")
+    implementation("com.nikeo:anx:1.0.2-SNAPSHOT")
 }
 
 apply(from = "../gradle/gradle-mvn-push.gradle.kts")
