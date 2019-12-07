@@ -8,7 +8,6 @@ import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.utils.FileUtils
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.io.IOUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Input
@@ -18,10 +17,7 @@ import org.gradle.kotlin.dsl.property
 import org.objectweb.asm.*
 import java.io.File
 import java.io.FileOutputStream
-import java.util.jar.JarEntry
-import java.util.jar.JarFile
-import java.util.jar.JarOutputStream
-import java.util.zip.ZipEntry
+import com.nikeo.anx.jars.modifyJar
 
 
 class LollipopCrashWebViewFixingPlugin : Plugin<Project> {
@@ -98,51 +94,27 @@ private class LollipopCrashWebViewFixingTransform(
                 tmpFile.delete()
             }
 
-            val jarFile = JarFile(jarInput.file)
-            val enumeration = jarFile.entries()
-
-            val jarOutputStream = JarOutputStream(FileOutputStream(tmpFile))
-
-            while (enumeration.hasMoreElements()) {
-                val jarEntry = enumeration.nextElement() as JarEntry
-                val entryName = jarEntry.name
-                val zipEntry = ZipEntry(entryName)
-                val inputStream = jarFile.getInputStream(zipEntry)
-
-                crashWebViews.qualifiedNames.orNull?.forEach { qualifiedName ->
+            jarInput.file.modifyJar(tmpFile) { jarEntry, inputStream ->
+                crashWebViews.qualifiedNames.orNull?.firstOrNull { qualifiedName ->
                     val qualifiedNamePath = qualifiedName.replace(
                         ".",
                         File.separator
                     )
-                    if (entryName == qualifiedNamePath + SdkConstants.DOT_CLASS
-                    ) {
-                        project.logInfo("start fix $qualifiedName")
-                        jarOutputStream.putNextEntry(zipEntry)
+                    jarEntry.name == qualifiedNamePath + SdkConstants.DOT_CLASS
+                }?.let { qualifiedName ->
+                    val qualifiedNamePath = qualifiedName.replace(
+                        ".",
+                        File.separator
+                    )
+                    project.logInfo("start fix $qualifiedName")
 
-                        val classReader = ClassReader(IOUtils.toByteArray(inputStream))
-                        val classWriter = ClassWriter(ClassWriter.COMPUTE_MAXS)
+                    val cr = ClassReader(inputStream)
+                    val cw = ClassWriter(ClassWriter.COMPUTE_MAXS)
 
-                        classReader.accept(
-                            MyClassVisitor(classWriter, qualifiedNamePath),
-                            ClassReader.EXPAND_FRAMES
-                        )
-                        val byteArr = classWriter.toByteArray()
-
-                        jarOutputStream.write(byteArr)
-                    } else {
-                        jarOutputStream.putNextEntry(zipEntry)
-                        jarOutputStream.write(IOUtils.toByteArray(inputStream))
-                    }
-                } ?: run {
-                    jarOutputStream.putNextEntry(zipEntry)
-                    jarOutputStream.write(IOUtils.toByteArray(inputStream))
+                    cr.accept(MyClassVisitor(cw, qualifiedNamePath), ClassReader.EXPAND_FRAMES)
+                    cw.toByteArray()
                 }
-
-                jarOutputStream.closeEntry()
             }
-            //结束
-            jarOutputStream.close()
-            jarFile.close()
 
             val dest = outputProvider.getContentLocation(
                 jarName + md5Name,
@@ -150,6 +122,7 @@ private class LollipopCrashWebViewFixingTransform(
                 jarInput.scopes,
                 Format.JAR
             )
+
             FileUtils.copyFile(tmpFile, dest)
             tmpFile.delete()
         }

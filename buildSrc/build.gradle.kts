@@ -53,6 +53,13 @@ repositories {
     mavenCentral()
     google()
     jcenter()
+    maven {
+        url = uri(properties["SNAPSHOT_REPOSITORY_URL"] as String)
+        credentials {
+            username = properties["SONATYPE_NEXUS_USERNAME"] as String
+            password = properties["SONATYPE_NEXUS_PASSWORD"] as String
+        }
+    }
 }
 
 dependencies {
@@ -60,6 +67,7 @@ dependencies {
     compileOnly(gradleApi())
     compileOnly("org.ow2.asm:asm:6.0")
     implementation("com.android.tools.build:gradle:3.5.0")
+    implementation("com.nikeo:anx:1.0.1-SNAPSHOT")
 }
 
 apply(from = "../gradle/gradle-mvn-push.gradle.kts")
