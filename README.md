@@ -1,4 +1,6 @@
-# [SuperclassReplacementGradlePlugin](https://plugins.gradle.org/plugin/com.nikeo.gradle.superclass-replacement)
+# DEPRECATED
+This is no longer supported, please consider using [reparatur](https://github.com/nikeorever/reparatur) instead.
+
 Use android transform api to dynamically replace super class
 
 * Using the plugins DSL:
