@@ -1,4 +1,6 @@
 # DEPRECATED
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
+
 This is no longer supported, please consider using [reparatur](https://github.com/nikeorever/reparatur) instead.
 
 Use android transform api to dynamically replace super class
